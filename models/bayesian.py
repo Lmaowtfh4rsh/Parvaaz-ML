@@ -1,5 +1,5 @@
 # ==========================
-# Model 4: Bayesian Ridge Regression
+# Model 3: Bayesian Ridge Regression
 # ==========================
 
 # --- Imports ---
@@ -17,14 +17,7 @@ RSEED = 42
 np.random.seed(RSEED)
 
 # --- Load Data ---
-train = pd.read_csv("data/train.csv")
-
-# --- Preprocessing ---
-# Encode Lifestyle Activities (Yes/No → 1/0)
-train["Lifestyle Activities"] = train["Lifestyle Activities"].map({"Yes": 1, "No": 0})
-
-# Handle missing values (if any)
-train = train.fillna(train.mean())
+train = pd.read_csv("data/train_processed.csv")
 
 # Separate features and target
 X = train.drop(columns=["Recovery Index"])
@@ -60,11 +53,8 @@ print("========================================")
 bayesian_pipe.fit(X, y)
 
 # --- Load Test Data ---
-test = pd.read_csv("data/test.csv")
-
-# Apply same preprocessing to test set
-test["Lifestyle Activities"] = test["Lifestyle Activities"].map({"Yes": 1, "No": 0})
-test = test.fillna(train.mean())
+test = pd.read_csv("data/test_processed.csv")
+test_ids = pd.read_csv('data/test_ids.csv')
 
 # --- Predict on Test Set ---
 preds = bayesian_pipe.predict(test[X.columns])
@@ -74,10 +64,10 @@ preds = np.round(np.clip(preds, 10, 100)).astype(int)
 
 # --- Save Submission File ---
 submission = pd.DataFrame({
-    "Id": test["Id"],
+    "Id": test_ids["Id"],
     "Recovery Index": preds
 })
 
-submission.to_csv("submission_bayesianridge.csv", index=False)
+submission.to_csv("submission/submission_bayesianridge.csv", index=False)
 
 print("✅ Submission file 'submission_bayesianridge.csv' successfully created!")
