@@ -21,11 +21,11 @@ To reproduce the analysis and results, follow these steps:
 
 ### 1. Clone the Repository
 
-First, clone this repository to your local machine.
-
 ```bash
-git clone [https://github.com/YourUsername/Your-Repo-Name.git](https://github.com/YourUsername/Your-Repo-Name.git)
-cd Your-Repo-Name
+git clone https://github.com/Lmaowtfh4rsh/Parvaaz-ML.git
+```
+```bash
+cd Parvaaz-ML
 ```
 
 ### 2. Create and Activate a Virtual Environment
