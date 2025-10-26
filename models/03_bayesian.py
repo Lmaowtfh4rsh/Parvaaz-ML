@@ -59,15 +59,12 @@ test_ids = pd.read_csv('data/test_ids.csv')
 # --- Predict on Test Set ---
 preds = bayesian_pipe.predict(test[X.columns])
 
-# Clip and round predictions as per problem statement
-preds = np.round(np.clip(preds, 10, 100)).astype(int)
-
 # --- Save Submission File ---
 submission = pd.DataFrame({
     "Id": test_ids["Id"],
     "Recovery Index": preds
 })
 
-submission.to_csv("submission/submission_bayesianridge.csv", index=False)
+submission.to_csv("submission/submission_model3.csv", index=False)
 
-print("✅ Submission file 'submission_bayesianridge.csv' successfully created!")
+print("✅ Submission file 'submission_model3.csv' successfully created!")
