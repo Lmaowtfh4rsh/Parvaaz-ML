@@ -1,0 +1,218 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{fancyhdr}
+
+% Page setup
+\geometry{margin=1in}
+\setstretch{1.2}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Patient Recovery Index Prediction}
+\fancyhead[R]{Checkpoint 1 Report}
+\fancyfoot[C]{\thepage}
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+
+% ----------------------------------------------------------------------
+\begin{document}
+% ----------------------------------------------------------------------
+
+\begin{center}
+    \vspace*{1cm}
+    \Huge \textbf{Report 1: Patient Recovery Index Prediction} \\
+    \vspace{0.4cm}
+    \Large \textbf{ML Project Report (Checkpoint 1)} \\
+    \vspace{0.8cm}
+    \large
+    Team Members \\
+    1. Gautam Kappagal – IMT2023082 \\
+    2. Harsh Modi – IMT2023607 \\
+    3. Harsh Gupta – IMT2023121 \\
+    \vspace{0.6cm}
+    \textbf{GitHub Link:} \href{https://github.com/Lmaowtfh4rsh/Parvaaz-ML}{https://github.com/Lmaowtfh4rsh/Parvaaz-ML}
+    \vfill
+    \textbf{Date:} \today
+\end{center}
+
+\newpage
+
+% ----------------------------------------------------------------------
+\section{Task}
+% ----------------------------------------------------------------------
+
+The objective of this project is to develop and evaluate machine learning models that predict a patient’s \textbf{Recovery Index} based on medical and lifestyle features. This is a supervised regression problem where the target variable --- Recovery Index --- is a continuous score ranging from 10 to 100, indicating the extent of a patient’s recovery progress.
+
+The task involves:
+\begin{itemize}
+    \item Performing exploratory data analysis (EDA) and preprocessing.
+    \item Engineering interaction features to capture nonlinear relationships.
+    \item Training and comparing multiple regression models.
+    \item Selecting the best-performing model using 10-fold cross-validation.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section{Dataset and Feature Description}
+% ----------------------------------------------------------------------
+
+The dataset consists of 10,000 patient records, each containing both clinical and behavioral predictors of recovery. The key variables are as follows:
+
+\begin{itemize}
+    \item \textbf{Therapy Hours:} Total hours spent in therapy.
+    \item \textbf{Initial Health Score:} Health score during the initial check-up.
+    \item \textbf{Lifestyle Activities:} Whether the patient engaged in healthy lifestyle activities (Yes/No).
+    \item \textbf{Average Sleep Hours:} Average daily sleep hours.
+    \item \textbf{Follow-Up Sessions:} Number of follow-up appointments.
+\end{itemize}
+
+The target variable, \textbf{Recovery Index}, quantifies recovery progress, where higher scores indicate better outcomes.
+
+% ----------------------------------------------------------------------
+\section{EDA and Preprocessing}
+% ----------------------------------------------------------------------
+
+\subsection{Data Cleaning}
+The training and test datasets were first inspected for missing or duplicate values. The datasets were found to be complete, so no imputation was required.
+
+The \texttt{Lifestyle Activities} column was converted into numeric form using binary encoding:
+\[
+\text{Yes} \rightarrow 1, \quad \text{No} \rightarrow 0
+\]
+
+Identifiers were removed from both datasets:
+\begin{verbatim}
+df_train_id_dropped = df_train.drop('Id', axis=1)
+df_test_id_dropped = df_test.drop('Id', axis=1)
+\end{verbatim}
+
+\subsection{Initial Model Exploration with Base Features}
+The initial analysis began with the five base features provided in the dataset: Therapy Hours, Initial Health Score, Lifestyle Activities, Average Sleep Hours, and Follow-Up Sessions. A range of models, including linear (Linear Regression, Ridge, Lasso, Bayesian Ridge), instance-based (KNN), and tree-based (Decision Tree, Random Forest, AdaBoost) algorithms, were evaluated using these base features.
+
+\subsection{Feature Scaling}
+For models sensitive to feature magnitude (Linear Regression, Ridge, Lasso, Bayesian Ridge, KNN), features were scaled using \texttt{StandardScaler}. To ensure proper evaluation and prevent data leakage during the 10-fold cross-validation process, scaling was integrated as the first step within a \texttt{Pipeline} for these models. Tree-based models, being insensitive to feature scale, did not require this preprocessing step.
+
+\subsection{Feature Engineering for Linear Model Enhancement}
+Cross-validation results indicated that regularized linear models, particularly Lasso Regression, provided the best performance on the original 5 features. To further enhance the predictive power of these linear models by allowing them to capture potential non-linear relationships and feature interactions, a feature engineering step was undertaken. All pairwise interaction terms between the original 5 features were generated (5C2 = 10 new features).
+
+\[
+\text{Example Interaction Feature: } Therapy\_Hours \times Initial\_Health\_Score
+\]
+
+This expanded the feature set from 5 to 15 total features. Subsequent modeling focused primarily on applying regularized linear models (Lasso) to this richer, 15-feature dataset, leading to significant improvements in the final prediction accuracy.
+
+% ----------------------------------------------------------------------
+\section{Models Used for Training}
+% ----------------------------------------------------------------------
+
+All models were evaluated using 10-fold cross-validation with RMSE as the performance metric. The \texttt{scoring='neg\_root\_mean\_squared\_error'} metric in \texttt{GridSearchCV} was used.
+
+\subsection{Linear and Regularized Models}
+\begin{itemize}
+    \item \textbf{Linear Regression:} Baseline model to measure linear fit.
+    \item \textbf{Ridge Regression:} Introduced L2 regularization to control coefficient magnitude.
+    \item \textbf{Lasso Regression:} Applied L1 regularization to perform feature selection.
+    \item \textbf{Elastic Net:} Combined L1 and L2 regularization; tuned using \texttt{alpha} and \texttt{l1\_ratio}.
+    \item \textbf{Bayesian Ridge Regression:} Probabilistic variant of Ridge Regression that estimates priors over coefficients. It automatically determines regularization parameters, requiring no manual tuning.
+\end{itemize}
+
+\subsection{Nonlinear and Tree-Based Models}
+\begin{itemize}
+    \item \textbf{K-Nearest Neighbors (KNN):} Tested multiple $k$ values and weights for optimal local averaging.
+    \item \textbf{Decision Tree:} Tuned using \texttt{max\_depth} and \texttt{min\_samples\_leaf}.
+    \item \textbf{Random Forest:} Ensemble of trees; parameters tuned were \texttt{n\_estimators}, \texttt{max\_depth}, and \texttt{max\_features}.
+    \item \textbf{AdaBoost:} Boosting ensemble using shallow Decision Trees as weak learners; tuned for \texttt{n\_estimators}, \texttt{learning\_rate}, and \texttt{base estimator depth}.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section{Hyperparameter Tuning}
+% ----------------------------------------------------------------------
+
+All models were tuned using 10-fold cross-validation through \texttt{GridSearchCV}.  
+
+\begin{itemize}
+    \item \textbf{Linear Models:} Tuned $\alpha$ (regularization strength) and $\texttt{l1\_ratio}$ for Elastic Net.
+    \item \textbf{KNN:} Tuned $\texttt{n\_neighbors}$ between 3 and 21 with uniform and distance as model weights.
+    \item \textbf{Decision Tree:} Tuned $\texttt{max\_depth}$ and $\texttt{min\_samples\_leaf}$.
+    \item \textbf{Random Forest:} Tuned $\texttt{n\_estimators}$, $\texttt{max\_depth}$, and $\texttt{max\_features}$.
+    \item \textbf{AdaBoost:} Tuned $\texttt{n\_estimators}$ and $\texttt{learning\_rate}$.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section{Performance Discussion}
+% ----------------------------------------------------------------------
+
+\subsection{Model Comparison}
+The table below shows a summary of the 10-fold cross-validation RMSE scores and key tuned parameters.
+
+\begin{table}[htbp] % Use htbp for better float placement
+\centering
+\caption{Comparison of Model Performance (Best 10-Fold CV RMSE with 5 features)}
+\label{tab:model_comparison} % Add a label for referencing
+\begin{tabular}{l c l}
+\toprule
+\textbf{Model} & \textbf{Best RMSE (CV)} & \textbf{Key Parameters / Feature Set} \\
+\midrule
+% --- BASELINE ---
+Linear Regression (5 feats) & \textbf{2.043} & N/A \\
+Elastic Net (5 feats) & 2.044 & $\alpha = 0.0013$, $\texttt{l1\_ratio} = 1.0$ \\
+Bayesian Ridge (5 feats) & 2.0435 & Auto-tuned priors \\
+% --- NON-LINEAR (Generally worse, show best attempt) ---
+KNN (5 feats) & 2.783 & $k = 19$, $\texttt{weights} = \text{'distance'}$ \\
+Decision Tree (5 feats) & 2.429 & $\texttt{max\_depth}=\text{None}$, $\texttt{min\_samples\_leaf}=10$ \\
+Random Forest (5 feats) & 2.213 & $\texttt{n\_est}=150$, $\texttt{max\_depth}=20$, $\texttt{min\_leaf}=5$ \\ 
+AdaBoost (5 feats) & 2.38 & $\texttt{n\_est}=100$, $\texttt{lr}=1.0$ \\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Conclusion on Best Model}
+
+Initial cross-validation on the base 5 features suggested that simple Linear Regression and Bayesian Ridge Regression (both achieving a CV RMSE of approx. 2.043) were the strongest performers, indicating a highly linear underlying relationship in the data. Non-linear models generally performed worse on this initial feature set.
+
+However, the hypothesis that linear models could be further improved by capturing feature interactions led to the creation of a 15-feature set including all pairwise interaction terms. When models were evaluated on this richer feature set, a different picture emerged on the Kaggle public leaderboard, which serves as the ultimate test on unseen data.
+
+While baseline Linear Regression achieved a Kaggle score of approx. 2.011 (with rounding), the \textbf{Elastic Net model, configured as a Lasso Regressor} ($\texttt{l1\_ratio}=1.0$) and tuned with a small alpha ($\alpha=0.0015$), achieved the top submitted score of 1.980-1.981 (when predicting continuous values without rounding, approx. 2.002 with rounding). This demonstrated the superiority of the 15-feature set combined with Lasso's regularization and feature selection capabilities for generalizing to the test data.
+
+Key observations leading to this conclusion:
+\begin{itemize}
+    \item \textbf{Feature Engineering Was Crucial:} Adding the 10 interaction features significantly boosted the performance of regularized linear models on the unseen test data, surpassing the simpler models.
+    \item \textbf{Lasso Excelled at Generalization:} Despite slightly higher CV scores compared to the baseline, the Lasso model on the 15-feature set generalized better to the Kaggle test set, achieving the lowest error. This highlights Lasso's ability to handle potentially correlated interaction terms effectively by shrinking less important coefficients.
+    \item \textbf{Non-Linear Models Underperformed:} Instance-based (KNN) and tree-based models (Decision Tree, Random Forest, AdaBoost) consistently yielded higher errors on the test set compared to the regularized linear models, likely due to overfitting the highly linear patterns present in the training data.
+    \item \textbf{Further Complexity Did Not Help:} Subsequent attempts to refine the feature set further (e.g., adding polynomials, removing interactions, adding ratios/bins) or ensemble top models did not improve upon the best Lasso score on the leaderboard.
+\end{itemize}
+
+Therefore, the final selected model is the Lasso Regression ($\alpha=0.0015$) trained on the 15-feature dataset comprising the original 5 features plus all 10 pairwise interactions.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Screenshot 2025-10-22 043635.png} 
+    \caption{Feature Importance (Coefficients) from the best Lasso model ($\alpha=0.0015$) trained on the 15-feature dataset. Note that interactions involving \texttt{Lifestyle\_Activities} were automatically assigned zero importance.}
+    \label{fig:feature_importance}
+\end{figure}
+
+% ----------------------------------------------------------------------
+\section{Final Model and Reproducibility}
+% ----------------------------------------------------------------------
+
+\subsection{Final Training and Prediction}
+Based on the extensive evaluation, the final selected model was the \textbf{Lasso Regression} (implemented using \texttt{ElasticNet} with $\texttt{l1\_ratio}=1.0$ and tuned $\alpha=0.0015$). This model was trained on the complete training dataset, which includes the 5 original features plus all 10 pairwise interaction features (15 features total). Predictions for the Recovery Index were then generated using this trained model on the correspondingly processed official test dataset. The final predictions were submitted as continuous float values, as rounding increased the error on the Kaggle leaderboard.
+
+\subsection{Reproducibility}
+\begin{itemize}
+    \item All analysis scripts, Jupyter notebooks, and generated data files are available on GitHub: \href{https://github.com/Lmaowtfh4rsh/Parvaaz-ML}{Parvaaz-ML Repository}.
+    \item A consistent random seed (\texttt{random\_state=42}) was used throughout the modeling process to ensure consistent results.
+    \item Scikit-learn \texttt{Pipeline} objects were utilized to encapsulate feature scaling (\texttt{StandardScaler}) and model fitting, preventing data leakage during cross-validation and ensuring the same preprocessing steps were applied to the test data.
+    \item The required Python libraries and their specific versions are documented in the \texttt{requirements.txt} file, allowing for the recreation of the computational environment.
+\end{itemize}
+\end{document}
